@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penzión Kyselka Trenčín</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080401;color:#f5efe8;font-family:'Lato',sans-serif;overflow-x:hidden}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,5rem);line-height:1.1}
+h2{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,4vw,3rem);line-height:1.2}
+h3{font-size:clamp(1.1rem,3vw,1.8rem);font-family:'Playfair Display',serif}
+p{font-size:clamp(0.95rem,2vw,1.1rem);line-height:1.7}
+.scene{padding:clamp(20px,5vw,80px);height:500vh;position:relative}
+.scene-inner{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scene-content{opacity:0;transform:translateY(30px);transition:opacity 0.9s ease,transform 0.9s ease;max-width:900px;width:100%;padding:clamp(16px,4vw,60px);z-index:10;position:relative}
+.scene-content.active{opacity:1;transform:translateY(0)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.btn{display:inline-block;padding:clamp(12px,2vw,18px) clamp(20px,4vw,44px);border-radius:50px;text-decoration:none;font-weight:700;transition:all 0.3s;cursor:pointer}
+canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#C8922A,#e8b84b);z-index:100;transition:width 0.1s}
+.nav-dots{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:12px}
+.nav-dot{width:12px;height:12px;border-radius:50%;background:rgba(200,146,42,0.4);cursor:pointer;transition:all 0.3s;border:2px solid rgba(200,146,42,0.6)}
+.nav-dot.active{background:#C8922A;transform:scale(1.3)}
+.mascot{position:fixed;bottom:50px;left:50px;width:80px;z-index:200;cursor:pointer}
+.speech-bubble{position:fixed;bottom:145px;left:20px;background:rgba(20,10,0,0.95);border:1px solid #C8922A;border-radius:12px;padding:10px 14px;font-size:0.8rem;color:#e8d5a0;max-width:220px;z-index:201;display:none;line-height:1.5}
+.speech-bubble::after{content:'';position:absolute;bottom:-8px;left:40px;border:8px solid transparent;border-top-color:#C8922A;border-bottom:none}
+.badge{display:inline-block;background:rgba(200,146,42,0.2);border:1px solid #C8922A;border-radius:20px;padding:6px 18px;font-size:0.85rem;color:#e8b84b;margin-bottom:20px;letter-spacing:1px;text-transform:uppercase}
+.accent-line{width:80px;height:3px;background:linear-gradient(90deg,#C8922A,#e8b84b);margin:20px 0;border-radius:2px}
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(200,146,42,0.2);border-radius:16px;padding:28px;transition:all 0.3s}
+.card:hover{background:rgba(200,146,42,0.1);transform:translateY(-4px)}
+.stat-block{text-align:center;padding:20px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(200,146,42,0.15)}
+.stat-num{font-family:'Playfair Display',serif;font-size:2.5rem;color:#C8922A;font-weight:700}
+.stat-label{font-size:0.85rem;color:#a89070;margin-top:4px}
+.contact-grid{display:flex;gap:32px;flex-wrap:wrap}
+.contact-item{display:flex;align-items:flex-start;gap:12px}
+.contact-icon{font-size:1.5rem;min-width:36px}
+.btn-primary{background:linear-gradient(135deg,#C8922A,#e8b84b);color:#1a0f00;font-size:1.1rem}
+.btn-primary:hover{box-shadow:0 0 30px rgba(200,146,42,0.4);transform:translateY(-2px)}
+.btn-secondary{background:transparent;border:2px solid #C8922A;color:#e8b84b}
+.btn-secondary:hover{background:rgba(200,146,42,0.15)}
+nav{position:fixed;top:0;left:0;right:0;z-index:99;padding:20px 40px;transition:all 0.3s;display:flex;justify-content:space-between;align-items:center}
+nav.scrolled{background:rgba(8,4,1,0.95);backdrop-filter:blur(10px);padding:12px 40px;box-shadow:0 2px 20px rgba(0,0,0,0.5)}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:#e8b84b}
+.quote-text{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,3vw,2rem);font-style:italic;color:#e8b84b;line-height:1.6;text-align:center}
+.quote-author{color:#C8922A;margin-top:16px;font-size:0.95rem;text-align:center;letter-spacing:2px}
+@media(max-width:768px){
+.nav-dots{display:none}
+.mascot{width:48px!important;bottom:16px!important;left:auto!important;right:16px!important}
+.btn{width:100%;display:block;text-align:center;margin:8px 0}
+.contact-grid{flex-direction:column}
+.scene-content{padding:16px}
+nav{padding:16px 20px}
+nav.scrolled{padding:10px 20px}
+}
+@media(max-width:480px){
+.cards{grid-template-columns:1fr}
+.stats{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="progress-bar" id="pb"></div>
+<nav id="nav"><div class="logo">🏡 Penzión Kyselka</div></nav>
+
+<div class="nav-dots" id="navDots">
+<div class="nav-dot active" onclick="scrollToScene(0)" title="Úvod"></div>
+<div class="nav-dot" onclick="scrollToScene(1)" title="Príbeh"></div>
+<div class="nav-dot" onclick="scrollToScene(2)" title="Služby"></div>
+<div class="nav-dot" onclick="scrollToScene(3)" title="Filozofia"></div>
+<div class="nav-dot" onclick="scrollToScene(4)" title="Kontakt"></div>
+</div>
+
+<div class="mascot" id="mascot" onclick="mascotClick()">
+<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="50" cy="60" rx="30" ry="35" fill="#f5e6c8"/>
+<rect x="30" y="25" width="40" height="18" rx="4" fill="white"/>
+<rect x="28" y="20" width="44" height="8" rx="3" fill="#e0e0e0"/>
+<circle cx="38" cy="55" r="7" fill="white"/>
+<circle cx="62" cy="55" r="7" fill="white"/>
+<circle cx="40" cy="55" r="4" fill="#2d1a00"/>
+<circle cx="64" cy="55" r="4" fill="#2d1a00"/>
+<circle cx="41" cy="53" r="1.5" fill="white"/>
+<circle cx="65" cy="53" r="1.5" fill="white"/>
+<ellipse cx="38" cy="62" rx="5" ry="3" fill="#f4a0a0"/>
+<ellipse cx="62" cy="62" rx="5" ry="3" fill="#f4a0a0"/>
+<path d="M 40 70 Q 50 77 60 70" stroke="#8b4513" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M 40 73 Q 46 77 50 75 Q 54 77 60 73" fill="#c88060"/>
+<line x1="30" y1="68" x2="23" y2="72" stroke="#d4a47c" stroke-width="2"/>
+<line x1="70" y1="68" x2="77" y2="72" stroke="#d4a47c" stroke-width="2"/>
+<line x1="23" y1="72" x2="20" y2="85" stroke="#d4a47c" stroke-width="2"/>
+<line x1="77" y1="72" x2="74" y2="85" stroke="#d4a47c" stroke-width="2"/>
+<circle cx="19" cy="87" r="4" fill="#C8922A"/>
+<rect x="36" y="92" width="28" height="22" rx="3" fill="#e8d0a0"/>
+<line x1="50" y1="92" x2="50" y2="114" stroke="#C8922A" stroke-width="1"/>
+</svg>
+</div>
+<div class="speech-bubble" id="bubble">Vitajte v Penzióne Kyselka! 🍀</div>
+
+<!-- Scene 1: VSTUP -->
+<section class="scene" id="s0">
+<div class="scene-inner">
+<div class="scene-content" id="sc0">
+<div class="badge">🏔️ Trenčín · Ubytovanie · Non-stop</div>
+<h1>Penzión<br><span style="color:#C8922A">Kyselka</span></h1>
+<div class="accent-line"></div>
+<p style="max-width:600px;color:#c8b89a;margin-bottom:32px">Váš útulný domov v srdci Trenčína — moderné izby, príjemná atmosféra a vynikajúce polohy blízko mesta. Dokonalé pre turistov, rodiny aj firemných cestujúcich.</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<a href="tel:+421327434212" class="btn btn-primary">📞 Zavolajte nám</a>
+<a href="mailto:penzionkyselka@penzionkyselka.sk" class="btn btn-secondary">✉️ Napíšte nám</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Scene 2: PRÍBEH -->
+<section class="scene" id="s1">
+<div class="scene-inner">
+<div class="scene-content" id="sc1">
+<h2>Náš <span style="color:#C8922A">Príbeh</span></h2>
+<div class="accent-line"></div>
+<p style="color:#c8b89a;margin-bottom:20px">Penzión Kyselka sa nachádza v malebnej časti Kubráň na okraji Trenčína. Poskytujeme ubytovanie pre turistov, rodiny, lyžiarov aj pracovne cestujúcich. Naša poloha je ideálna — kúsok od centra mesta a zároveň v tichom prostredí zelenej prírody.</p>
+<p style="color:#c8b89a;margin-bottom:32px">Srdcom nášho penziónu je reštaurácia s domácou kuchyňou a letná terasa. Každý hosť je u nás vítaný s úsmevom a osobným prístupom — to je náš záväzok.</p>
+<div class="stats">
+<div class="stat-block"><div class="stat-num" data-target="10">0</div><div class="stat-label">Typov izieb</div></div>
+<div class="stat-block"><div class="stat-num" data-target="24">0</div><div class="stat-label">Hodín k dispozícii</div></div>
+<div class="stat-block"><div class="stat-num" data-target="5">0</div><div class="stat-label">km od centra</div></div>
+<div class="stat-block"><div class="stat-num" data-target="100">0</div><div class="stat-label">% spokojnosť</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Scene 3: SLUŽBY -->
+<section class="scene" id="s2">
+<div class="scene-inner">
+<div class="scene-content" id="sc2">
+<h2><span style="color:#C8922A">Naše</span> Služby</h2>
+<div class="accent-line"></div>
+<div class="cards">
+<div class="card">
+<div style="font-size:2.5rem;margin-bottom:12px">🛏️</div>
+<h3>Ubytovanie</h3>
+<p style="color:#a89070;margin-top:10px">Príjemne zariadené jednoposteľové a dvojposteľové izby s vlastnou kúpeľňou, TV a bezplatným Wi-Fi. Od 35 €/noc.</p>
+</div>
+<div class="card">
+<div style="font-size:2.5rem;margin-bottom:12px">🍽️</div>
+<h3>Reštaurácia</h3>
+<p style="color:#a89070;margin-top:10px">Domáce slovenské jedlá, raňajky a večere. Príjemná atmosféra pre rodiny aj firemné skupiny. Otvorená denne.</p>
+</div>
+<div class="card">
+<div style="font-size:2.5rem;margin-bottom:12px">🌿</div>
+<h3>Letná Terasa</h3>
+<p style="color:#a89070;margin-top:10px">Oddychujte na záhrade s krásnym výhľadom na okolie. Posedenie s nápojmi v tichom prostredí prírody.</p>
+</div>
+<div class="card">
+<div style="font-size:2.5rem;margin-bottom:12px">🅿️</div>
+<h3>Bezplatné Parkovanie</h3>
+<p style="color:#a89070;margin-top:10px">Súkromné parkovisko priamo pri penzióne pre všetkých hostí. Bezpečné a bezplatné.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Scene 4: FILOZOFIA -->
+<section class="scene" id="s3">
+<div class="scene-inner">
+<div class="scene-content" id="sc3" style="text-align:center">
+<div style="font-size:4rem;margin-bottom:24px">🌙</div>
+<div class="quote-text">"Každý hosť je pre nás vzácny hosť. Staráme sa o vás tak, aby ste sa cítili ako doma — alebo ešte lepšie."</div>
+<div class="accent-line" style="margin:24px auto"></div>
+<div class="quote-author">— Tím Penziónu Kyselka, Trenčín</div>
+<p style="color:#a89070;margin-top:32px;max-width:600px;margin-left:auto;margin-right:auto">Veríme, že ubytovanie nie je len o posteli a streche nad hlavou. Je to zážitok, ktorý si so sebou nesieme. Preto dbáme na každý detail — od čistoty izieb po priateľský úsmev pri recepcii.</p>
+</div>
+</div>
+</section>
+
+<!-- Scene 5: KONTAKT -->
+<section class="scene" id="s4">
+<div class="scene-inner">
+<div class="scene-content" id="sc4">
+<h2>Navštívte <span style="color:#C8922A">Nás</span></h2>
+<div class="accent-line"></div>
+<div class="contact-grid" style="margin-bottom:32px">
+<div class="contact-item">
+<div class="contact-icon">📍</div>
+<div>
+<div style="font-weight:700;color:#e8b84b;margin-bottom:4px">Adresa</div>
+<div style="color:#c8b89a">Kubranská 282<br>911 01 Trenčín</div>
+</div>
+</div>
+<div class="contact-item">
+<div class="contact-icon">📞</div>
+<div>
+<div style="font-weight:700;color:#e8b84b;margin-bottom:4px">Telefón</div>
+<div style="color:#c8b89a">+421 32 743 4212</div>
+</div>
+</div>
+<div class="contact-item">
+<div class="contact-icon">✉️</div>
+<div>
+<div style="font-weight:700;color:#e8b84b;margin-bottom:4px">Email</div>
+<div style="color:#c8b89a">penzionkyselka@<br>penzionkyselka.sk</div>
+</div>
+</div>
+<div class="contact-item">
+<div class="contact-icon">🕐</div>
+<div>
+<div style="font-weight:700;color:#e8b84b;margin-bottom:4px">Otváracie hodiny</div>
+<div style="color:#c8b89a">Po–Ne: 10:00–21:00<br>Recepcia: non-stop</div>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<a href="https://wa.me/421327434212" class="btn btn-primary">💬 WhatsApp</a>
+<a href="tel:+421327434212" class="btn btn-secondary">📞 Zavolať</a>
+</div>
+<p style="color:#666;font-size:0.8rem;margin-top:24px">© 2026 Penzión Kyselka Trenčín · penzionkyselka.sk</p>
+</div>
+</div>
+</section>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+let W,H,scrollProgress=0;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();
+window.addEventListener('resize',resize);
+
+const stars=Array.from({length:80},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.5+0.3,s:Math.random()*0.02+0.005,t:Math.random()*Math.PI*2,twinkle:Math.random()*0.5+0.5}));
+const fireflies=Array.from({length:20},()=>({x:Math.random()*W,y:Math.random()*H*0.7+H*0.3,vx:(Math.random()-0.5)*0.5,vy:(Math.random()-0.5)*0.3,a:Math.random(),da:Math.random()*0.02+0.005}));
+const campfire={x:0,y:0,particles:[]};
+for(let i=0;i<30;i++)campfire.particles.push({x:0,y:0,vx:(Math.random()-0.5)*1.5,vy:-(Math.random()*2+1),a:1,s:Math.random()*3+1,hue:Math.random()*30+10});
+let meteors=[];
+let meteorTimer=0;
+let fogPhase=0;
+
+function drawFrame(t){
+ctx.clearRect(0,0,W,H);
+const skyBlend=Math.min(scrollProgress*2,1);
+const r1=8+skyBlend*30,g1=4+skyBlend*15,b1=1+skyBlend*10;
+const grad=ctx.createLinearGradient(0,0,0,H);
+grad.addColorStop(0,`rgb(${r1},${g1},${b1})`);
+grad.addColorStop(0.6,`rgb(${Math.floor(r1*1.5)},${Math.floor(g1*1.5)},${Math.floor(b1*2)})`);
+grad.addColorStop(1,'#0a0603');
+ctx.fillStyle=grad;
+ctx.fillRect(0,0,W,H);
+// Moon
+const mx=W*0.8,my=H*0.15;
+const moonGlow=ctx.createRadialGradient(mx,my,10,mx,my,80);
+moonGlow.addColorStop(0,'rgba(255,248,200,0.3)');
+moonGlow.addColorStop(1,'transparent');
+ctx.fillStyle=moonGlow;
+ctx.fillRect(0,0,W,H);
+ctx.beginPath();ctx.arc(mx,my,22,0,Math.PI*2);
+ctx.fillStyle='#fffce0';ctx.fill();
+// Stars
+stars.forEach(s=>{
+s.t+=s.s;
+const alpha=s.twinkle*(0.5+0.5*Math.sin(s.t));
+ctx.beginPath();ctx.arc(s.x*W,s.y*H*0.6,s.r,0,Math.PI*2);
+ctx.fillStyle=`rgba(255,248,220,${alpha})`;ctx.fill();
+});
+// Aurora
+for(let i=0;i<3;i++){
+const ph=t*0.0003+i*2.1;
+ctx.beginPath();
+const yw=H*0.3+i*H*0.05;
+for(let x=0;x<=W;x+=4){
+const y=yw+Math.sin(x*0.008+ph)*30+Math.sin(x*0.012+ph*1.3)*20;
+x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+}
+const hue=i===0?120:i===1?280:160;
+ctx.strokeStyle=`hsla(${hue},60%,60%,0.12)`;
+ctx.lineWidth=12+i*8;ctx.stroke();
+}
+// Pine forest silhouette
+ctx.fillStyle='#0d0804';
+for(let px=0;px<W;px+=30){
+const ph2=Math.sin(px*0.05)*15;
+const th=H*0.35+ph2;
+ctx.beginPath();
+ctx.moveTo(px,H);ctx.lineTo(px,th);
+ctx.lineTo(px+8,th+20);ctx.lineTo(px+4,th);
+ctx.lineTo(px+12,th+15);ctx.lineTo(px+6,th-8);
+ctx.lineTo(px+14,th+5);ctx.lineTo(px+8,th-20);
+ctx.lineTo(px+20,th-5);ctx.lineTo(px+14,th-22);
+ctx.lineTo(px+22,th-10);ctx.lineTo(px+16,th-30);
+ctx.lineTo(px+24,th-18);ctx.lineTo(px+18,th-38);
+ctx.lineTo(px+26,th);ctx.lineTo(px+30,H);
+ctx.closePath();ctx.fill();
+}
+// Building with glowing windows
+const bx=W*0.1,by=H*0.5;
+ctx.fillStyle='#0f0a06';
+ctx.fillRect(bx,by,W*0.12,H*0.4);
+for(let wy=0;wy<4;wy++){
+for(let wx=0;wx<3;wx++){
+const wbright=0.4+0.3*Math.sin(t*0.003+wy*1.1+wx*0.7);
+ctx.fillStyle=`rgba(255,200,100,${wbright})`;
+ctx.fillRect(bx+10+wx*22,by+15+wy*28,14,18);
+}
+}
+// Campfire
+campfire.x=W*0.5;campfire.y=H*0.72;
+campfire.particles.forEach(p=>{
+p.x+=p.vx;p.y+=p.vy;p.a-=0.015;
+if(p.a<=0){p.x=campfire.x+(Math.random()-0.5)*12;p.y=campfire.y;p.vx=(Math.random()-0.5)*1.5;p.vy=-(Math.random()*2+1);p.a=1;}
+ctx.beginPath();ctx.arc(campfire.x+p.x-campfire.x,p.y,p.s,0,Math.PI*2);
+ctx.fillStyle=`hsla(${p.hue},90%,60%,${p.a*0.8})`;ctx.fill();
+});
+// Fireflies
+fireflies.forEach(f=>{
+f.x+=f.vx;f.y+=f.vy;f.a+=f.da;
+if(f.a>1||f.a<0)f.da*=-1;
+if(f.x<0)f.x=W;if(f.x>W)f.x=0;
+const fg=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,6);
+fg.addColorStop(0,`rgba(180,255,150,${f.a*0.8})`);
+fg.addColorStop(1,'transparent');
+ctx.fillStyle=fg;ctx.fillRect(f.x-8,f.y-8,16,16);
+});
+// Meteor
+meteorTimer++;
+if(meteorTimer>180){meteorTimer=0;meteors.push({x:-50,y:Math.random()*H*0.4,vx:8,vy:4,a:1});}
+meteors=meteors.filter(m=>{
+m.x+=m.vx;m.y+=m.vy;m.a-=0.02;
+ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x-40,m.y-20);
+ctx.strokeStyle=`rgba(255,255,200,${m.a})`;ctx.lineWidth=2;ctx.stroke();
+return m.a>0;
+});
+fogPhase+=0.003;
+for(let i=0;i<3;i++){
+const fx=(Math.sin(fogPhase+i*2)*0.3+0.5)*W;
+const fg2=ctx.createRadialGradient(fx,H*0.65,0,fx,H*0.65,W*0.2);
+fg2.addColorStop(0,'rgba(50,30,15,0.08)');fg2.addColorStop(1,'transparent');
+ctx.fillStyle=fg2;ctx.fillRect(0,0,W,H);
+}
+requestAnimationFrame(drawFrame);
+}
+requestAnimationFrame(drawFrame);
+
+let currentScene=-1;
+const bubbleTexts=['Vitajte v Penzióne Kyselka! 🍀','Sme tu pre vás! Poznajte náš príbeh 🏡','Pozrite si naše skvelé služby! 🛏️','Pohostinnosť je naša filozofia 💛','Kontaktujte nás kedykoľvek! 📞'];
+function setScene(i){
+if(currentScene===i)return;
+if(currentScene>=0){
+const prev=document.getElementById('sc'+currentScene);
+if(prev){prev.classList.remove('active');}
+const prevDot=document.querySelectorAll('.nav-dot')[currentScene];
+if(prevDot)prevDot.classList.remove('active');
+}
+currentScene=i;
+const el=document.getElementById('sc'+i);
+if(el)el.classList.add('active');
+const dot=document.querySelectorAll('.nav-dot')[i];
+if(dot)dot.classList.add('active');
+const bubble=document.getElementById('bubble');
+bubble.textContent=bubbleTexts[i]||'';
+bubble.style.display='block';
+clearTimeout(window._bt);
+window._bt=setTimeout(()=>bubble.style.display='none',3000);
+gsap.to('#mascot',{duration:0.3,rotate:10,yoyo:true,repeat:1});
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+setScene(0);
+gsap.to('#mascot',{y:-10,duration:1.5,yoyo:true,repeat:-1,ease:'sine.inOut'});
+});
+
+const scenes=[0,1,2,3,4];
+scenes.forEach(i=>{
+ScrollTrigger.create({
+trigger:`#s${i}`,
+start:'top center',
+end:'bottom center',
+onEnter:()=>setScene(i),
+onEnterBack:()=>setScene(i),
+});
+});
+
+window.addEventListener('scroll',()=>{
+const sp=window.scrollY/(document.body.scrollHeight-window.innerHeight);
+scrollProgress=sp;
+document.getElementById('pb').style.width=(sp*100)+'%';
+if(window.scrollY>60)document.getElementById('nav').classList.add('scrolled');
+else document.getElementById('nav').classList.remove('scrolled');
+});
+
+function scrollToScene(i){
+const el=document.getElementById('s'+i);
+if(el)el.scrollIntoView({behavior:'smooth'});
+}
+
+function mascotClick(){
+const msgs=['Vynikajúce ubytovanie čaká! 🛏️','Zavolajte nám: +421 32 743 4212 📞','Sme v Kubráni, Trenčín 🏔️','Raňajky zdarma! 🥐','Bezplatné parkovanie! 🚗'];
+const b=document.getElementById('bubble');
+b.textContent=msgs[Math.floor(Math.random()*msgs.length)];
+b.style.display='block';
+clearTimeout(window._bt2);
+window._bt2=setTimeout(()=>b.style.display='none',3000);
+gsap.to('#mascot',{duration:0.4,rotate:360,ease:'back.out'});
+}
+
+const counters=document.querySelectorAll('[data-target]');
+const counterObs=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting){
+const target=+e.target.dataset.target;
+let current=0;
+const step=target/60;
+const timer=setInterval(()=>{
+current+=step;
+if(current>=target){current=target;clearInterval(timer);}
+e.target.textContent=Math.floor(current)+(e.target.dataset.suffix||'');
+},33);
+counterObs.unobserve(e.target);
+}
+});
+});
+counters.forEach(c=>counterObs.observe(c));
+</script>
+</body>
+</html>
